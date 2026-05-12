@@ -1,5 +1,7 @@
 # CrossCheck Protocol (expanded guide)
 
+**[Try it now](https://atom.builders/crosscheck/)** — open the interactive CrossCheck workflow on Atom Builders.
+
 This document **complements** [`README.md`](README.md). The README is the short overview and repo map; this file is the **long-form protocol**: how to think about claims, how to run the five steps well, quick hallucination checks, and a printable-style checklist.
 
 **Educational use only.** CrossCheck is not medical, financial, or legal advice. Read [`AGREEMENTS.md`](AGREEMENTS.md) and [`LICENSE`](LICENSE).
@@ -12,7 +14,8 @@ This document **complements** [`README.md`](README.md). The README is the short 
 |----------|------|
 | `README.md` | Project introduction, step summary, tool table, references, disclaimer summary |
 | `CrossCheck_Protocol.md` | This file: triage, depth, examples, tests, checklist |
-| `index.html` | Interactive prompts, paste workflow, exports |
+| [`atom.builders/crosscheck`](https://atom.builders/crosscheck/) | **Try it now:** hosted interactive prompts, paste workflow, exports |
+| `index.html` | Same workflow as a local/static copy (interactive prompts, paste workflow, exports) |
 | `AGENTS.md` | Guidance for AI models in referee/validator steps (linked from those prompts) |
 | `AGREEMENTS.md` | Binding terms and acceptance (canonical) |
 
