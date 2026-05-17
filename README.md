@@ -10,11 +10,11 @@ An open, free **educational** protocol for questioning claims you see online - n
 
 ## What Is CrossCheck?
 
-CrossCheck is a short process anyone can follow to **practice** examining something they heard before acting on it or sharing it. On the interactive page you accept the terms, enter **one claim** in a single text field (or leave it empty to use the built-in Lego safety example), pick three AI tools, then run copy-paste prompts for a **validator → referee → meta-referee** chain.
+CrossCheck is a short process anyone can follow to **practice** examining something they heard before acting on it or sharing it. You define **one claim**, run three independent AI passes (**validator → referee → meta-referee**), then read primary sources yourself.
 
-It takes about ten minutes. It uses free tools. It works for many everyday claims you encounter online - from product safety to breaking news. It is **not** a substitute for professional medical, mental-health, financial, tax, investment, or legal advice, and it does not meet any regulatory or clinical standard for verifying those topics.
+It takes about ten minutes. It uses free tools. It works for many everyday claims you encounter online - from product safety to breaking news. It is **not** a substitute for professional medical, mental-health, financial, tax, investment, or legal advice.
 
-**[Try it live: atom.builders/crosscheck](https://atom.builders/crosscheck/)**
+**[Try the interactive tool](https://atom.builders/crosscheck/)** — or use the copy-paste **[prompt templates](templates/)** in this repository with any AI you already have.
 
 ---
 
@@ -22,106 +22,37 @@ It takes about ten minutes. It uses free tools. It works for many everyday claim
 
 | Step | What You Do |
 |------|-------------|
-| **Claim** | After accepting terms, type or paste the **exact wording** you want to verify into the **single claim field** (question, statement, rumor, quote — anything). Leave the field empty to keep the built-in Lego example in every prompt. Click **Continue to lineup**. |
-| **Lineup** | Pick three AI tools (validator, referee, meta-referee). Click **Continue to CrossCheck steps**. |
-| **1** | Ask the **primary validator** using the page’s **one-shot** prompt: a concise answer grounded in **primary** sources **plus** a small structured “CrossCheck summary” block in the **same** reply. There is **no** second “opposite angle” prompt — one claim only. |
-| **2** | Paste that **entire** reply into the page, then open a **new chat** for the **referee** and run the Step 2 prompt (it embeds your claim and paste). |
-| **3** | Paste the referee’s **full** report, then open a **third new chat** for the **meta-referee** and run the Step 3 prompt. Optionally paste that reply into the form for a complete export. |
-| **Publish** | When validator + referee pastes are done, you can export or **publish** a record to the moderated community feed (see `CONFIGURATION.md`). |
+| **Claim** | Write the **exact wording** you want to verify (question, statement, rumor, quote — anything). One claim only — no “opposite angle” field. |
+| **1 — Validator** | New chat → [primary-validator template](templates/primary-validator.md): short answer grounded in **primary** sources **plus** a structured CrossCheck summary in the **same** reply. |
+| **2 — Referee** | New chat → [referee template](templates/referee.md): embeds your claim and the **full** validator paste; critiques that pass (not a competing narrative). |
+| **3 — Meta-referee** | New chat → [meta-referee template](templates/meta-referee.md): embeds claim, validator paste, and referee report; stress-tests the referee against primaries. |
 
 **The golden rule:** No matter how many AIs agree, click through to the actual primary source and read it yourself.
 
-**Don't have three different tools?** Open separate *new chats* or temporary tabs in the same provider — the key is that each conversation starts fresh so no answer influences the next.
+**Don't have three different tools?** Open separate *new chats* or temporary tabs in the same provider — each conversation must start fresh so no answer influences the next.
 
-Long-form guidance (triage, expanded steps, hallucination checks, checklist): [`CrossCheck_Protocol.md`](https://github.com/AtomBuilders/crosscheck/blob/main/CrossCheck_Protocol.md) in the main CrossCheck repository.
-
----
-
-## What's in This Repo
-
-| File | Description |
-|------|-------------|
-| `index.html` | Interactive page: terms gate, **single claim field**, phased workflow (claim → lineup → run), prompts, paste workflow, exports. Dark / light theme. |
-| `AGENTS.md` | **AI assistant guide** for validator / referee / meta-referee prompts: fact-checking (including health/science) is in scope; personalized professional advice is not. Linked from those prompts on the page. |
-| `CrossCheck_Protocol.md` | Long-form protocol (complements this README): triage, expanded steps, hallucination checks, printable-style checklist. |
-| `AGREEMENTS.md` | **Terms and agreements** (canonical). |
-| `LICENSE` | **CC BY 4.0** legal text for the materials. |
-| `README.md` | This overview. |
-| [`CONFIGURATION.md`](CONFIGURATION.md) | **Server / publishing:** environment variables, optional `api/config.local.php`, Slack webhook, moderation, SQLite paths. |
+Long-form guidance (triage, expanded steps, hallucination checks, checklist): [`CrossCheck_Protocol.md`](CrossCheck_Protocol.md).
 
 ---
 
-## Server operators: SQLite and the publications table
+## What's in This Repository
 
-If you run the optional **publish-to-feed** flow, each submission is stored as a row in SQLite (default file: **`data/crosscheck.sqlite`** at the repository root). You can override the path with **`CROSSCHECK_DB_PATH`** — see [`CONFIGURATION.md`](CONFIGURATION.md).
+| File / folder | Description |
+|---------------|-------------|
+| [`templates/`](templates/) | Copy-paste prompts with `{{CLAIM}}` and paste placeholders — use offline or alongside any chat UI |
+| [`CrossCheck_Protocol.md`](CrossCheck_Protocol.md) | Long-form protocol: triage, depth, examples, tests, checklist |
+| [`AGENTS.md`](AGENTS.md) | Guidance for AI models in the three passes |
+| [`AGREEMENTS.md`](AGREEMENTS.md) | Terms and agreements (canonical) |
+| [`LICENSE`](LICENSE) | CC BY 4.0 |
+| `README.md` | This overview |
 
-### Install the SQLite CLI (Ubuntu)
-
-```bash
-sudo apt update
-sudo apt install sqlite3
-sqlite3 --version
-```
-
-### Connect and inspect
-
-From the repository root (adjust the path if your checkout lives elsewhere):
-
-```bash
-cd /path/to/crosscheck
-sqlite3 data/crosscheck.sqlite
-```
-
-Useful interactive commands: `.tables`, `.schema publications`, `.headers on`, `.mode column`, `.quit`.
-
-List stored publications (IDs are 32-character hex strings; you will also see them in `browse.html?id=…` and in Slack if configured):
-
-```sql
-SELECT * FROM publications;
-```
-
-For a shorter overview:
-
-```sql
-SELECT id, moderation_state, datetime(created_at, 'unixepoch') AS created_utc,
-       substr(claim_text, 1, 100) AS claim_preview
-FROM publications
-ORDER BY created_at DESC;
-```
-
-### Unpublish an approved post (keep the row)
-
-**Shared runs** and **`api/publication.php`** only expose rows where **`moderation_state` is `approved`**. To take a live post down while keeping the stored JSON for your own records, set the state to **`rejected`**:
-
-```sql
-UPDATE publications
-SET moderation_state = 'rejected'
-WHERE id = '<your-32-char-hex-publication-id>';
-```
-
-Valid values in this codebase are **`pending`**, **`approved`**, and **`rejected`**. You can also set a row back to **`pending`** if you want it to sit for re-review.
-
-### Delete a row entirely
-
-```sql
-DELETE FROM publications WHERE id = '<your-32-char-hex-publication-id>';
-```
-
-This removes the full **`record_json`** payload for that id.
-
-### Permissions
-
-If the web server created **`data/crosscheck.sqlite`**, your user may need **`sudo sqlite3 …`** or appropriate read/write access on the file (and its directory) to run **`UPDATE`** / **`DELETE`**.
-
-### HTTP alternative
-
-To change moderation state without SQL, use **`api/moderate.php`** with the **`CROSSCHECK_MODERATE_SECRET`** token (see [`CONFIGURATION.md`](CONFIGURATION.md)).
+The hosted tool at [atom.builders/crosscheck](https://atom.builders/crosscheck/) implements the same protocol with a guided form (claim field, tool lineup, prompt generation, paste handoffs). It is not part of this documentation repository.
 
 ---
 
 ## Free AI Tools You Can Use
 
-Any combination works. The interactive page lets you pick your own.
+Any combination works.
 
 | Tool | Free Tier | Link |
 |------|-----------|------|
@@ -147,7 +78,7 @@ A single AI model can:
 - **Reflect its training biases** without flagging them
 - **Sound confident** even when it's wrong
 
-CrossCheck chains **three** independent model passes (validator, referee, meta-referee) and still expects **you** to read primaries — so one model’s blind spots are less likely to become yours.
+CrossCheck chains **three** independent model passes and still expects **you** to read primaries — so one model’s blind spots are less likely to become yours.
 
 ---
 
@@ -184,13 +115,11 @@ CrossCheck chains **three** independent model passes (validator, referee, meta-r
 
 ## Disclaimer and terms of use
 
-CrossCheck (this repository, the interactive page, prompts, and related materials) is offered for **educational and academic purposes** only. **Full binding text:** [`AGREEMENTS.md`](AGREEMENTS.md). A short on-page summary also appears at [atom.builders/crosscheck/#terms](https://atom.builders/crosscheck/#terms).
+CrossCheck materials in this repository are offered for **educational and academic purposes** only. **Full binding text:** [`AGREEMENTS.md`](AGREEMENTS.md).
 
 **Not professional advice.** Nothing here is medical, financial, or legal advice. Do not use these materials in place of a qualified professional. If you may have a medical emergency, call your local emergency number.
 
 **No warranty.** Materials are provided "as is." AI systems can hallucinate.
-
-**Acceptance.** By using the interactive page you agree to [`AGREEMENTS.md`](AGREEMENTS.md). The page requires checking an acceptance box before tools unlock.
 
 ---
 
@@ -202,7 +131,7 @@ CrossCheck is a living document. If you find a broken link, a better primary sou
 
 ## License
 
-The CrossCheck **documentation and code** in this repository are licensed under **CC BY 4.0**. See the [`LICENSE`](LICENSE) file and [Creative Commons BY 4.0](https://creativecommons.org/licenses/by/4.0/). You are free to share and adapt - give credit.
+The CrossCheck **documentation** in this repository is licensed under **CC BY 4.0**. See [`LICENSE`](LICENSE) and [Creative Commons BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ---
 
